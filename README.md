@@ -1,4 +1,4 @@
-# mesh-cnbl-internal-01
+# mesh-cnlb-internal-01
 combining mesh ingress gateways with internal https LB on GKE using Istio and Gateway APIs. Istio APIs are used within the mesh, and Gateway APIs are used for north/south networking to get requests to the mesh. 
 this could be reproduced using Gateway API for everything, but i'll leave that as an exercise for the reader for now.
 
