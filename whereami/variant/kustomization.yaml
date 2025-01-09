@@ -1,0 +1,12 @@
+namespace: whereami
+commonLabels:
+  app: whereami
+resources:
+- ../base
+patches:
+- path: cm-flag.yaml
+  target:
+    kind: ConfigMap
+- path: service-type.yaml
+  target:
+    kind: Service

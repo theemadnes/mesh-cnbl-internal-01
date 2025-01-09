@@ -1,5 +1,6 @@
 # mesh-cnbl-internal-01
-combining mesh ingress gateways with internal https LB on GKE using Istio and Gateway APIs
+combining mesh ingress gateways with internal https LB on GKE using Istio and Gateway APIs. Istio APIs are used within the mesh, and Gateway APIs are used for north/south networking to get requests to the mesh. 
+this could be reproduced using Gateway API for everything, but i'll leave that as an exercise for the reader for now.
 
 we'll test access using a GCE VM to call mesh-based services, traversing an internal HTTP proxy LB
 
@@ -54,4 +55,26 @@ gcloud compute networks subnets create proxy-only-subnet-${REGION} \
     --region=$REGION \
     --network=$VPC \
     --range=192.168.0.0/24 # replace with your own range
+```
+
+### deploy the ingress gateway pods and service
+
+in this example, i'm just creating the IG service up as ClusterIP, but any service type will work, since the NEGs will just reference the pods anyway
+
+```
+# create namespace and label it for injection
+kubectl create namespace ingress-gateway
+kubectl label namespace ingress-gateway istio-injection=enabled
+kubectl apply -k ingress-gateway/variant
+```
+
+### deploy the sample workload (whereami) pods and service
+
+```
+kubectl create namespace whereami
+kubectl label namespace whereami istio-injection=enabled
+kubectl apply -k whereami/variant
+
+# also create the Istio virtual service for whereami
+kubectl apply -f whereami-virtualservice/
 ```

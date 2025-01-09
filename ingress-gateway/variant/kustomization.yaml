@@ -1,0 +1,15 @@
+namespace: ingress-gateway
+resources:
+- ../base
+- role.yaml
+- rolebinding.yaml
+patches:
+- path: service-proto-type.yaml
+  target:
+    kind: Service
+- path: gateway.yaml
+  target:
+    kind: Gateway
+- path: deployment.yaml
+  target:
+    kind: Deployment
