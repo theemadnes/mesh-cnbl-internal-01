@@ -97,7 +97,7 @@ echo "Gateway IP: $GATEWAY_IP"
 test by creating a virtual machine in the same project / vpc / region as the load balancer in the console, and log into it 
 
 ```
-# replace with your gateway IP
+# replace with your gateway IP, and run this command from the VM
 curl --header 'Host: whereami.mesh.example.com' http://10.128.0.8
 ```
 
