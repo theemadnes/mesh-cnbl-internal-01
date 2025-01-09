@@ -63,14 +63,31 @@ gcloud compute networks subnets create proxy-only-subnet-${REGION} \
     --range=192.168.0.0/24 # replace with your own range
 ```
 
-### deploy the ingress gateway pods and service
+### deploy the ingress gateway pods and service, with a sample certificate
 
 in this example, i'm just creating the IG service up as ClusterIP, but any service type will work, since the NEGs will just reference the pods anyway
+
+this is just used to simulate TLS usage. you should use TLS both at the load balancer *and* the ingress gateway pods to make sure your setup can support both HTTP/1.1 and HTTP/2 (which requires TLS, and is used for other higher level protocols like gRPC).
+
+in this example, we're just using a self-signed certificate, but in real-world use cases of course you'd use real certs. we'll store the cert as a K8s secret. 
 
 ```
 # create namespace and label it for injection
 kubectl create namespace ingress-gateway
 kubectl label namespace ingress-gateway istio-injection=enabled
+
+# create the certificate
+openssl req -new -newkey rsa:2048 -days 365 -nodes -x509 \
+    -subj "/CN=*.mesh.example.com/O=example.com" \
+    -keyout mesh.example.com.key \
+    -out mesh.example.com.crt
+
+# use K8s secrets to store the cert
+kubectl -n ingress-gateway create secret tls \
+    ss-cert \
+    --key=mesh.example.com.key \
+    --cert=mesh.example.com.crt
+
 kubectl apply -k ingress-gateway/variant
 ```
 
@@ -102,13 +119,14 @@ test by creating a virtual machine in the same project / vpc / region as the loa
 
 ```
 # replace with your gateway IP, and run this command from the VM
-curl --header 'Host: whereami.mesh.example.com' http://10.128.0.8
+# using `-k` since it's a self-signed cert
+curl --header 'Host: whereami.mesh.example.com' -k https://10.128.0.8
 ```
 
 result:
 
 ```
-$ curl --header 'Host: whereami.mesh.example.com' http://10.128.0.8 -s|jq
+$ curl --header 'Host: whereami.mesh.example.com' -k https://10.128.0.8 -s|jq
 {
   "cluster_name": "my-mesh-cluster",
   "gce_instance_id": "4236041537522405134",
