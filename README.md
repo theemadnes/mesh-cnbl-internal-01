@@ -4,13 +4,13 @@ this could be reproduced using Gateway API for everything, but i'll leave that a
 
 the Gateway API controller is automatically installed on GKE Autopilot clusters, but must be manually enabled for GKE Standard clusters; see https://cloud.google.com/kubernetes-engine/docs/how-to/deploying-gateways#enable-gateway-existing-cluster
 
-we'll test access using a GCE VM to call mesh-based services, traversing an internal HTTP proxy LB
+we'll test access using a GCE VM to call mesh-based services, traversing an internal HTTP(S) proxy LB
 
 this also assumes that all necessary APIs have been enabled within the project
 
 architecture is:
 
-`internal client -> HTTP load balancer -> ingress gateway pods (via NEGs w/ custom health check) -> backend service`
+`internal client -> HTTP(S) load balancer -> ingress gateway pods (via NEGs w/ custom health check + self-signed demo cert both at load balancer and ingress gateway pods) -> backend service`
 
 ### setup
 
@@ -102,7 +102,7 @@ kubectl apply -k whereami/variant
 kubectl apply -f whereami-virtualservice/
 ```
 
-### create HTTP load balancer and reference the ingress gateway service
+### create HTTP(S) load balancer and reference the ingress gateway service
 
 the NEG controller will automatically create the NEGs to create the mapping between the load balancer and the ingress gateway pods
 
