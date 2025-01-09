@@ -2,6 +2,8 @@
 combining mesh ingress gateways with internal https LB on GKE using Istio and Gateway APIs. Istio APIs are used within the mesh, and Gateway APIs are used for north/south networking to get requests to the mesh. 
 this could be reproduced using Gateway API for everything, but i'll leave that as an exercise for the reader for now.
 
+the Gateway API controller is automatically installed on GKE Autopilot clusters, but must be manually enabled for GKE Standard clusters; see https://cloud.google.com/kubernetes-engine/docs/how-to/deploying-gateways#enable-gateway-existing-cluster
+
 we'll test access using a GCE VM to call mesh-based services, traversing an internal HTTP proxy LB
 
 this also assumes that all necessary APIs have been enabled within the project
@@ -77,4 +79,46 @@ kubectl apply -k whereami/variant
 
 # also create the Istio virtual service for whereami
 kubectl apply -f whereami-virtualservice/
+```
+
+### create HTTP load balancer and reference the ingress gateway service
+
+the NEG controller will automatically create the NEGs to create the mapping between the load balancer and the ingress gateway pods
+
+```
+# this creates the gateway, httproute, and custom health check objects
+kubectl apply -f gateway-api-load-balancer/
+
+# after a few moments, capture the IP address of the internal load balancer
+GATEWAY_IP=$(kubectl get gateway internal-http -n ingress-gateway -o jsonpath='{.status.addresses[?(@.type=="IPAddress")].value}')
+echo "Gateway IP: $GATEWAY_IP"
+```
+
+test by creating a virtual machine in the same project / vpc / region as the load balancer in the console, and log into it 
+
+```
+# replace with your gateway IP
+curl --header 'Host: whereami.mesh.example.com' http://10.128.0.8
+```
+
+result:
+
+```
+$ curl --header 'Host: whereami.mesh.example.com' http://10.128.0.8 -s|jq
+{
+  "cluster_name": "my-mesh-cluster",
+  "gce_instance_id": "4236041537522405134",
+  "gce_service_account": "mesh-internal-http-pxy-test-01.svc.id.goog",
+  "host_header": "whereami.mesh.example.com",
+  "metadata": "whereami",
+  "node_name": "gk3-my-mesh-cluster-pool-2-973644bc-np7s",
+  "pod_ip": "10.59.129.2",
+  "pod_name": "whereami-988cc4ddf-pk4xw",
+  "pod_name_emoji": "🛝",
+  "pod_namespace": "whereami",
+  "pod_service_account": "whereami",
+  "project_id": "mesh-internal-http-pxy-test-01",
+  "timestamp": "2025-01-09T02:54:50",
+  "zone": "us-central1-b"
+}
 ```

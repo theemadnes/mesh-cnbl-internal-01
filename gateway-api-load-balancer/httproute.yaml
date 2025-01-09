@@ -1,0 +1,15 @@
+kind: HTTPRoute
+apiVersion: gateway.networking.k8s.io/v1
+metadata:
+  name: ingress-gateway
+  namespace: ingress-gateway
+spec:
+  parentRefs:
+  - kind: Gateway
+    name: internal-http
+  hostnames:
+  - '*.mesh.example.com'
+  rules:
+  - backendRefs:
+    - name: asm-ingressgateway
+      port: 80
