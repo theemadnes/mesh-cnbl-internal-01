@@ -8,6 +8,10 @@ we'll test access using a GCE VM to call mesh-based services, traversing an inte
 
 this also assumes that all necessary APIs have been enabled within the project
 
+architecture is:
+
+`internal client -> HTTP load balancer -> ingress gateway pods (via NEGs w/ custom health check) -> backend service`
+
 ### setup
 
 ```
